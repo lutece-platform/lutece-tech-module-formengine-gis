@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<formDefinition name="gis-form" className="">
+    <title>Formulaire localisation GIS</title>
+    <subForms>
+  
+        <subFormDefinition name="localisation" className="">
+            <title>Localisation</title>
+            <formElements>
+  				<fields>
+                    <field type="text" name="adresse">
+                        <label>A quelle adresse ?</label>
+                        <value/>
+                        <checkFieldRules>
+                            <checkRule type="fieldRequired" parameter="true"/>
+                            <checkRule type="maxLength" parameter="255"/>
+                            <checkRule type="xss"/>
+                        </checkFieldRules>
+                    </field>
+                    <field type="text" name="lng">
+                    	<label>(Longitude)</label>
+                        <value/>
+                        <checkFieldRules>
+                            <checkRule type="xss"/>
+                        </checkFieldRules>
+                    </field>
+                    <field type="text" name="lat">
+                    	<label>(Latitude)</label>
+                        <value/>
+                        <checkFieldRules>
+                            <checkRule type="xss"/>
+                        </checkFieldRules>
+                    </field>
+                </fields>	
+                <buttons>
+                    <button name="Etape suivante" type="submit"/>
+                </buttons>
+            </formElements>
+        </subFormDefinition>
+    </subForms>
+    <outputs>
+        <outputSet useTransactionHeaders="false" >
+            <output outputProcessorClassName="fr.paris.lutece.plugins.formengine.modules.service.output.FileOutputProcessor" />
+        </outputSet>
+    </outputs>
+ 
+</formDefinition>
