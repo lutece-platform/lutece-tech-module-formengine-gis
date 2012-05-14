@@ -42,12 +42,12 @@ var GeolocUtils = {
 				assertZero(event.lonLat.lon) &&
 				event.address.length == 0
 			){
-				GeolocUtils.setLatInputField( "" );	
-				GeolocUtils.setLonInputField( "" );
-				GeolocUtils.setAddressInputField( "" );
+				if( event.inverse ) {
+					GeolocUtils.setAddressInputField( "" );
+				}
+				GeolocUtils.setLatInputField( "" );	GeolocUtils.setLonInputField( "" );
 			}else{
-				GeolocUtils.setLatInputField( event.lonLat.lat );	
-				GeolocUtils.setLonInputField( event.lonLat.lon );			
+				GeolocUtils.setLatInputField( event.lonLat.lat ); GeolocUtils.setLonInputField( event.lonLat.lon );			
 				if( event.namespace != 'dragComplete' && event.address.length != 0 ){
 					GeolocUtils.setAddressInputField( event.address );
 				}
