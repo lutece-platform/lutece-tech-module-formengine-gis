@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<formDefinition name="gis-form" className="">
+<formDefinition name="gis" className="">
     <title>Formulaire localisation GIS</title>
     <subForms>
   
@@ -39,7 +39,7 @@
     </subForms>
     <outputs>
         <outputSet useTransactionHeaders="false" >
-            <output outputProcessorClassName="fr.paris.lutece.plugins.formengine.modules.service.output.FileOutputProcessor" />
+            <output outputProcessorClassName="fr.paris.lutece.plugins.formengine.service.output.FileOutputProcessor" />
         </outputSet>
     </outputs>
  
