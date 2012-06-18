@@ -31,7 +31,15 @@ var GeolocUtils = {
 
 	initAutocomplete : function( ) 
 	{
+		var Csslink = document.createElement("link");
+		Csslink.rel="STYLESHEET";
+		Csslink.type="text/css";
+		Csslink.href="js/jquery/plugins/ui/css/jquery-ui.css";
+		document.getElementsByTagName('head')[0].appendChild(Csslink);
 		
+		$.getScript('jsp/plugins/address/modules/autocomplete/autocomplete-js.jsp',function(data, textStatus, jqxhr) {
+   			createAutocomplete(GeolocUtils.params.thisOject.selector);
+		});
 	},
 	
 	addGisEventListeners : function( ) 
@@ -57,13 +65,30 @@ var GeolocUtils = {
 		$("body").bind( 'GisLocalization.dragComplete', updateInputField);
 
 		$(GeolocUtils.params.thisOject).bind(GeolocUtils.params.onEvent, 
-				$.proxy(function (event){
-					if (  event.type != 'keypress' || event.keyCode == 13 ){
-						GeolocUtils.placeChangedEvent(event);
-					}
-				},
-				this)		
+			$.proxy(function (event){
+				if (GeolocUtils.params.thisOject.attr("class") == null ){
+					GeolocUtils.placeChangedEvent(event);
+				}
+			},
+			this)		
 		);
+		
+		$(GeolocUtils.params.thisOject).bind("keypress", 
+			$.proxy(function (event){
+				if ( event.keyCode == 13 ){
+					GeolocUtils.placeChangedEvent(event);
+				}
+			},
+			this)		
+		);
+		
+		$( GeolocUtils.params.thisOject ).bind( "autocompleteselect", function(event, ui) {
+			$('body').trigger(
+				jQuery.Event('GisLocalization.send', { 
+					address: ui.item.value
+				})
+			);
+		});
 	},
 	
 	showMap : function( ) 
