@@ -37,6 +37,7 @@ var GeolocUtils = {
 		Csslink.href="js/jquery/plugins/ui/css/jquery-ui.css";
 		document.getElementsByTagName('head')[0].appendChild(Csslink);
 		
+		$.getScript('js/jquery/plugins/ui/jquery.ui.custom-autocomplete.min.js');
 		$.getScript('jsp/plugins/address/modules/autocomplete/autocomplete-js.jsp',function(data, textStatus, jqxhr) {
    			createAutocomplete(GeolocUtils.params.thisOject.selector);
 		});
