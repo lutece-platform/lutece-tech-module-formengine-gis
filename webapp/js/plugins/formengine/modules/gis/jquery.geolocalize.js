@@ -65,7 +65,6 @@ var GeolocUtils = {
 				{
 					$(GeolocUtils.params.thisOject).bind("keyup", 
 							$.proxy(function (event){
-								alert("checked");
 								if( event.keyCode != 13 ) {
 									GeolocUtils.cleanMapEvent( );
 									GeolocUtils.setLatInputField( "" );	GeolocUtils.setLonInputField( "" );
