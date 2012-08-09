@@ -63,13 +63,13 @@ var GeolocUtils = {
 				
 				if( GeolocUtils.params.addressValid == true )
 				{
-					$(GeolocUtils.params.thisOject).bind("keyup", 
+					$(GeolocUtils.params.thisOject).bind("change", 
 							$.proxy(function (event){
 								if( event.keyCode != 13 ) {
 									GeolocUtils.cleanMapEvent( );
 									GeolocUtils.setLatInputField( "" );	GeolocUtils.setLonInputField( "" );
 								}
-								$(GeolocUtils.params.thisOject).unbind("keyup");
+								$(GeolocUtils.params.thisOject).unbind("change");
 							},
 							this)
 							
