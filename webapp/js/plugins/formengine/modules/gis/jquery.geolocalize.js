@@ -26,7 +26,9 @@ var GeolocUtils = {
 
 	initGeolocalization : function( params )
 	{
-		GeolocUtils.params = params;
+		GeolocUtils.params = $.extend({
+			currentAddressInputField : ""
+		}, params);
 	},
 
 	initAutocomplete : function( ) 
@@ -60,16 +62,18 @@ var GeolocUtils = {
 				if( event.namespace != 'dragComplete' && event.address.length != 0 ){
 					GeolocUtils.setAddressInputField( event.address );
 				}
-				
+				GeolocUtils.params.currentAddressInputField = GeolocUtils.getAddressInputField();
 				if( GeolocUtils.params.addressValid == true )
 				{
-					$(GeolocUtils.params.thisOject).bind("change", 
+					$(GeolocUtils.params.thisOject).bind("keyup", 
 							$.proxy(function (event){
-								if( event.keyCode != 13 ) {
+								if( GeolocUtils.params.currentAddressInputField != undefined &&
+									GeolocUtils.params.currentAddressInputField != GeolocUtils.getAddressInputField() 	) 
+								{
 									GeolocUtils.cleanMapEvent( );
 									GeolocUtils.setLatInputField( "" );	GeolocUtils.setLonInputField( "" );
+									$(GeolocUtils.params.thisOject).unbind("keyup");
 								}
-								$(GeolocUtils.params.thisOject).unbind("change");
 							},
 							this)
 							
