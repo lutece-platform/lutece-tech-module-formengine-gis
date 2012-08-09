@@ -23,7 +23,7 @@ $("#searchTextField").geolocalize({mapHeight : "400px", mapWidth : "100%"});
  */
 var GeolocUtils = {
 	params : null,
-	
+
 	initGeolocalization : function( params )
 	{
 		GeolocUtils.params = params;
@@ -60,20 +60,54 @@ var GeolocUtils = {
 				if( event.namespace != 'dragComplete' && event.address.length != 0 ){
 					GeolocUtils.setAddressInputField( event.address );
 				}
-			}
+				
+				if( GeolocUtils.params.addressValid == true )
+				{
+					$(GeolocUtils.params.thisOject).bind("keyup", 
+							$.proxy(function (event){
+								alert("checked");
+								if( event.keyCode != 13 ) {
+									GeolocUtils.cleanMapEvent( );
+									GeolocUtils.setLatInputField( "" );	GeolocUtils.setLonInputField( "" );
+								}
+								$(GeolocUtils.params.thisOject).unbind("keyup");
+							},
+							this)
+							
+					);	
+				}
+			}		
 		};
 		$("body").bind( 'GisLocalization.done', updateInputField);
 		$("body").bind( 'GisLocalization.dragComplete', updateInputField);
-
-		$(GeolocUtils.params.thisOject).bind(GeolocUtils.params.onEvent, 
-			$.proxy(function (event){
-				if (GeolocUtils.params.thisOject.attr("class") == null ){
-					GeolocUtils.placeChangedEvent(event);
-				}
-			},
-			this)		
-		);
 		
+		var reloadAddress = function ( ) {
+			var addressFieldValue = GeolocUtils.getAddressInputField( );
+			if( addressFieldValue != ""){
+					$('body').trigger(
+							jQuery.Event( 'GisLocalization.send',  { 'address': addressFieldValue } )
+					); 
+			}
+		};
+		
+		if( GeolocUtils.params.addressAutoReload ) {
+			$("body").bind( 'GisMap.displayComplete', reloadAddress );
+		}
+		
+		var onDisplayMap = GeolocUtils.params.onDisplayMap;
+		if( onDisplayMap != undefined || onDisplayMap != null ) {
+			$("body").bind( 'GisMap.displayComplete', onDisplayMap );
+		}
+		
+		if( GeolocUtils.params.autoComplete != true) 
+		{
+			$(GeolocUtils.params.thisOject).bind(GeolocUtils.params.onEvent, 
+				$.proxy(function (event){
+						GeolocUtils.placeChangedEvent(event);
+				},
+				this)		
+			);
+		}
 		$(GeolocUtils.params.thisOject).bind("keypress", 
 			$.proxy(function (event){
 				if ( event.keyCode == 13 ){
@@ -125,6 +159,13 @@ var GeolocUtils = {
 		$(document.getElementById($(GeolocUtils.params.thisOject).attr('id'))).val(data);
 	},
 	
+	getAddressInputField: function ( )
+	{
+		return $.trim( 
+				$(document.getElementById($(GeolocUtils.params.thisOject).attr('id'))).val() 
+		);
+	},
+	
 	setLonInputField: function ( data ) 
 	{
 		$("input[name='" + GeolocUtils.params.inputLngName + "']").val(data);
@@ -135,12 +176,16 @@ var GeolocUtils = {
 		$("input[name='" + GeolocUtils.params.inputLatName + "']").val(data);
 	},
 	
+	cleanMapEvent : function ()
+	{
+		$('body').trigger( jQuery.Event('GisLocalization.clean') );
+	},
+	
 	placeChangedEvent : function() 
 	{
-		var input = document.getElementById($(GeolocUtils.params.thisOject).attr('id'));
 		$('body').trigger(
 				jQuery.Event('GisLocalization.send', { 
-					address: $(input).val() 
+					address: GeolocUtils.getAddressInputField( ) 
 				})
 		);
 	}
@@ -148,12 +193,17 @@ var GeolocUtils = {
 
 jQuery.fn.geolocalize = function(params) {
 	params = $.extend({
-		inputLngName : "lng",
-		inputLatName : "lat",
-		onEvent :  "change",
-		idMapDiv : "carte",
-		mapHeight : "400px",
-		mapWidth : "100%"
+		inputLngName : "lng",	    // ID of the longitude input text field.
+		inputLatName : "lat",		// ID of the latitude input text field.
+		onEvent :  "change",    	// Exectute a geo-localization request after this event is triggered ( when autoComplete = false ).
+		onDisplayMap : undefined,	// Function triggered after map is displayed.
+		addressAutoReload : true,	// Execute geolocalization request when address input text field is not empty after the page is fully loaded.
+		addressValid : true,		// Clean the map whether address input text field is modified after a geo-localization request.
+		idMapDiv : "map_canvas",	// ID of the div that which contain the map.
+		mapHeight : "400px",    	// Height of the displayed map.
+		mapWidth : "100%",			// Width of the displayed map.
+		autoComplete : true,		// Activate/deactivate auto-complete feature from the address input text field.
+		
 	}, params);
 	
 	params.thisOject = this;
@@ -164,9 +214,13 @@ jQuery.fn.geolocalize = function(params) {
 	
 	$(document).ready(function(){
 		GeolocUtils.initGeolocalization(params);
-		GeolocUtils.initAutocomplete( );
+		if( GeolocUtils.params.autoComplete == true) 
+		{
+			GeolocUtils.initAutocomplete( );
+		}
 		GeolocUtils.addGisEventListeners( ); 
 		GeolocUtils.showMap( );
+		
 	});
 	return this;
 };
