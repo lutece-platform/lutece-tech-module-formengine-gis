@@ -23,12 +23,14 @@
 			<script type="text/javascript">
 				// Initialize GIS map
 				$(document).ready(function() {
-				$("#adresse").geolocalize({
+				$("#adresse").geolocalizeSuggestPOI({
 					mapHeight: "400px",
 					mapWidth: "99.25%",
 					inputLngName : "lng",
 					inputLatName : "lat",
-					gisCode : "TEST"
+					gisCode : "TEST", 
+					sourceSRID : "EPSG:27561",
+					destSRID : "EPSG:4326"
 				}).focus();
 				});
 				</script>

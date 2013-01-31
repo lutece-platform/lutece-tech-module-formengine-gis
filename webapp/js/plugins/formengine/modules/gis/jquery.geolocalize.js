@@ -45,9 +45,35 @@ var GeolocUtils = {
 		});
 	},
 	
-	addGisEventListeners : function( ) 
-	{				
-		var updateInputField = function(event) {	
+	initAutocompleteSuggestPOI : function( ) 
+	{
+		var Csslink = document.createElement("link");
+		Csslink.rel="STYLESHEET";
+		Csslink.type="text/css";
+		Csslink.href="js/jquery/plugins/ui/css/jquery-ui.css";
+		document.getElementsByTagName('head')[0].appendChild(Csslink);
+		
+		$.getScript("js/jquery/plugins/ui/jquery.ui.custom-autocomplete.min.js");
+		$.getScript("js/jquery/jQuery.onReady.js");
+		$.getScript("jsp/site/plugins/address/modules/autocomplete/SetupSuggestPOI.js.jsp");
+		$.getScript("js/plugins/address/modules/autocomplete/suggestPOI.js", function (d, y, t) {
+			setTimeout( function() {
+				var jAdresse = GeolocUtils.params.thisOject;
+				jAdresse.suggestPOI();
+				jAdresse.bind($.suggestPOI.EVT_SELECT, function(event) {
+					
+					var poi = event.poi;
+					
+					GeolocUtils.poiSelected(poi);
+				});
+			}, 1500);
+		});
+	},
+	
+	addGisLocalizationListeners : function ( ) {
+		
+		var updateInputField = function(event) {
+			
 			var assertZero = function (data) { return !Number(data)>0 };
 			if( assertZero(event.lonLat.lat) && 
 				assertZero(event.lonLat.lon) &&
@@ -58,7 +84,15 @@ var GeolocUtils = {
 				}
 				GeolocUtils.setLatInputField( "" );	GeolocUtils.setLonInputField( "" );
 			}else{
-				GeolocUtils.setLatInputField( event.lonLat.lat ); GeolocUtils.setLonInputField( event.lonLat.lon );			
+				//change sys proj
+				var source = new Proj4js.Proj(GeolocUtils.params.sourceSRID);
+				var dest = new Proj4js.Proj(GeolocUtils.params.destSRID);
+				
+				p = new Proj4js.Point(event.lonLat.lon, event.lonLat.lat);   
+				Proj4js.transform(source, dest, p);
+
+				GeolocUtils.setLonInputField( p.x );
+				GeolocUtils.setLatInputField( p.y ); 			
 				if( event.namespace != 'dragComplete' && event.address.length != 0 ){
 					GeolocUtils.setAddressInputField( event.address );
 				}
@@ -81,8 +115,12 @@ var GeolocUtils = {
 				}
 			}		
 		};
+		
 		$("body").bind( 'GisLocalization.done', updateInputField);
 		$("body").bind( 'GisLocalization.dragComplete', updateInputField);
+	},
+	
+	addGisMapListeners : function ( ) {
 		
 		var reloadAddress = function ( ) {
 			var addressFieldValue = GeolocUtils.getAddressInputField( );
@@ -101,6 +139,13 @@ var GeolocUtils = {
 		if( onDisplayMap != undefined || onDisplayMap != null ) {
 			$("body").bind( 'GisMap.displayComplete', onDisplayMap );
 		}
+	},
+	
+	addGisEventListeners : function( ) 
+	{				
+		
+		GeolocUtils.addGisLocalizationListeners();
+		GeolocUtils.addGisMapListeners();
 		
 		if( GeolocUtils.params.autoComplete != true) 
 		{
@@ -121,12 +166,34 @@ var GeolocUtils = {
 		);
 		
 		$( GeolocUtils.params.thisOject ).bind( "autocompleteselect", function(event, ui) {
-			$('body').trigger(
-				jQuery.Event('GisLocalization.send', { 
-					address: ui.item.value
-				})
-			);
+			GeolocUtils.addressSelected(ui.item.value);
 		});
+	},
+	
+	addGisEventListenersSuggestPoi: function( ) {
+		
+		GeolocUtils.addGisLocalizationListeners();
+		GeolocUtils.addGisMapListeners();
+		
+	},
+	
+	addressSelected : function (stringAddress) {
+		$('body').trigger(
+			jQuery.Event('GisLocalization.send', { 
+				address: stringAddress
+			})
+		);
+	},
+	
+	poiSelected : function (poi) {
+		var poiWithProj = poi;
+		poiWithProj.srid = GeolocUtils.params.sourceSRID;
+		
+		$('body').trigger(
+			jQuery.Event('GisLocalization.send.geolocalize.suggestPOI', {
+					poi: poiWithProj
+				})
+		);
 	},
 	
 	showMap : function( ) 
@@ -205,7 +272,7 @@ jQuery.fn.geolocalize = function(params) {
 		idMapDiv : "map_canvas",	// ID of the div that which contain the map.
 		mapHeight : "400px",    	// Height of the displayed map.
 		mapWidth : "100%",			// Width of the displayed map.
-		autoComplete : true,		// Activate/deactivate auto-complete feature from the address input text field.
+		autoComplete : true		// Activate/deactivate auto-complete feature from the address input text field.
 		
 	}, params);
 	
@@ -222,6 +289,41 @@ jQuery.fn.geolocalize = function(params) {
 			GeolocUtils.initAutocomplete( );
 		}
 		GeolocUtils.addGisEventListeners( ); 
+		GeolocUtils.showMap( );
+		
+	});
+	return this;
+};
+
+jQuery.fn.geolocalizeSuggestPOI = function(params) {
+	params = $.extend({
+		inputLngName : "lng",	    // ID of the longitude input text field.
+		inputLatName : "lat",		// ID of the latitude input text field.
+		onEvent :  "change",    	// Exectute a geo-localization request after this event is triggered ( when autoComplete = false ).
+		onDisplayMap : undefined,	// Function triggered after map is displayed.
+		addressAutoReload : true,	// Execute geolocalization request when address input text field is not empty after the page is fully loaded.
+		addressValid : true,		// Clean the map whether address input text field is modified after a geo-localization request.
+		idMapDiv : "map_canvas",	// ID of the div that which contain the map.
+		mapHeight : "400px",    	// Height of the displayed map.
+		mapWidth : "100%",			// Width of the displayed map.
+		autoComplete : true,		// Activate/deactivate auto-complete feature from the address input text field.
+		sourceSRID : "EPSG:27561",  // SRID from source POIs
+		destSRID : "EPSG:4326"      // SRID from destination fields
+	}, params);
+	
+	params.thisOject = this;
+	
+	$(this).keypress(function(event) {
+		return event.keyCode != 13;
+	});
+	
+	$(document).ready(function(){
+		GeolocUtils.initGeolocalization(params);
+		if( GeolocUtils.params.autoComplete == true) 
+		{
+			GeolocUtils.initAutocompleteSuggestPOI( );
+		}
+		GeolocUtils.addGisEventListenersSuggestPoi( ); 
 		GeolocUtils.showMap( );
 		
 	});
