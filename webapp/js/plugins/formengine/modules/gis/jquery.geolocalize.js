@@ -56,7 +56,7 @@ var GeolocUtils = {
 		$.getScript("js/jquery/plugins/ui/jquery.ui.custom-autocomplete.min.js");
 		$.getScript("js/jquery/jQuery.onReady.js");
 		$.getScript("jsp/site/plugins/address/modules/autocomplete/SetupSuggestPOI.js.jsp");
-		$.getScript("js/plugins/address/modules/autocomplete/suggestPOI.js", function (d, y, t) {
+		$.getScript("js/plugins/address/modules/autocomplete/jQuery.suggestPOI.js", function (d, y, t) {
 			setTimeout( function() {
 				var jAdresse = GeolocUtils.params.thisOject;
 				jAdresse.suggestPOI();
@@ -95,6 +95,8 @@ var GeolocUtils = {
 				GeolocUtils.setLatInputField( p.y ); 			
 				if( event.namespace != 'dragComplete' && event.address.length != 0 ){
 					GeolocUtils.setAddressInputField( event.address );
+					GeolocUtils.setLonAddressInputField( p.x );
+					GeolocUtils.setLatAddressInputField( p.y );
 				}
 				GeolocUtils.params.currentAddressInputField = GeolocUtils.getAddressInputField();
 				if( GeolocUtils.params.addressValid == true )
@@ -141,6 +143,50 @@ var GeolocUtils = {
 		}
 	},
 	
+	addGisMapListenersSuggestPOI : function ( ) {
+		
+		var reloadAddress = function ( ) {
+			
+			var addressFieldValue = GeolocUtils.getAddressInputField( );
+
+			var latFieldValue = GeolocUtils.getLatInputField( );
+			var lonFieldValue = GeolocUtils.getLonInputField( );
+			
+			var latAddressFieldValue = GeolocUtils.getLatAddressInputField( );
+			var lonAddressFieldValue = GeolocUtils.getLonAddressInputField( );
+			console.log("10");
+			if( addressFieldValue != "" ) {
+				console.log("11");
+				console.info("reload?? : "+latFieldValue+", "+lonFieldValue+"=> "+latAddressFieldValue+", "+lonAddressFieldValue);
+				console.log("12");
+				//on recupere les anciennes valeurs (avec la projection de destination donc)
+				var poi = {
+						typoLibelle: addressFieldValue,
+						x: lonAddressFieldValue,
+						y: latAddressFieldValue,
+						srid: GeolocUtils.params.destSRID
+				};
+				
+				$('body').trigger(
+						jQuery.Event('GisLocalization.send.geolocalize.suggestPOI', {
+								poi: poi
+							})
+					);
+				
+				// on repositionne le marker ensuite...
+			}
+		};
+		
+		if( GeolocUtils.params.addressAutoReload ) {
+			$("body").bind( 'GisMap.displayComplete', reloadAddress );
+		}
+		
+		var onDisplayMap = GeolocUtils.params.onDisplayMap;
+		if( onDisplayMap != undefined || onDisplayMap != null ) {
+			$("body").bind( 'GisMap.displayComplete', onDisplayMap );
+		}
+	},
+	
 	addGisEventListeners : function( ) 
 	{				
 		
@@ -173,7 +219,7 @@ var GeolocUtils = {
 	addGisEventListenersSuggestPoi: function( ) {
 		
 		GeolocUtils.addGisLocalizationListeners();
-		GeolocUtils.addGisMapListeners();
+		GeolocUtils.addGisMapListenersSuggestPOI();
 		
 	},
 	
@@ -241,9 +287,39 @@ var GeolocUtils = {
 		$("input[name='" + GeolocUtils.params.inputLngName + "']").val(data);
 	},
 	
-	setLatInputField: function (data ) 
+	setLatInputField: function ( data ) 
 	{
 		$("input[name='" + GeolocUtils.params.inputLatName + "']").val(data);
+	},
+	
+	getLonInputField: function (  ) 
+	{
+		return $("input[name='" + GeolocUtils.params.inputLngName + "']").val();
+	},
+	
+	getLatInputField: function (  ) 
+	{
+		return $("input[name='" + GeolocUtils.params.inputLatName + "']").val();
+	},
+	
+	setLonAddressInputField: function ( data ) 
+	{
+		return $("input[name='" + GeolocUtils.params.inputLngAddressName + "']").val(data);
+	},
+	
+	setLatAddressInputField: function ( data ) 
+	{
+		$("input[name='" + GeolocUtils.params.inputLatAddressName + "']").val(data);
+	},
+	
+	getLonAddressInputField: function (  ) 
+	{
+		return $("input[name='" + GeolocUtils.params.inputLngAddressName + "']").val();
+	},
+	
+	getLatAddressInputField: function (  ) 
+	{
+		return $("input[name='" + GeolocUtils.params.inputLatAddressName + "']").val();
 	},
 	
 	cleanMapEvent : function ()
@@ -299,6 +375,8 @@ jQuery.fn.geolocalizeSuggestPOI = function(params) {
 	params = $.extend({
 		inputLngName : "lng",	    // ID of the longitude input text field.
 		inputLatName : "lat",		// ID of the latitude input text field.
+		inputLngAddressName : "lngAddress",
+		inputLatAddressName : "latAddress",
 		onEvent :  "change",    	// Exectute a geo-localization request after this event is triggered ( when autoComplete = false ).
 		onDisplayMap : undefined,	// Function triggered after map is displayed.
 		addressAutoReload : true,	// Execute geolocalization request when address input text field is not empty after the page is fully loaded.
