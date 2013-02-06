@@ -250,7 +250,6 @@ var GeolocUtils = {
 	},
 	
 	poiSelected : function (poi) {
-		console.log(poi);
 		var poiWithProj = poi;
 		poiWithProj.srid = GeolocUtils.params.sourceSRID;
 		
@@ -434,6 +433,11 @@ jQuery.fn.geolocalizeSuggestPOI = function(params) {
 		if( GeolocUtils.params.autoComplete == true) 
 		{
 			GeolocUtils.initAutocompleteSuggestPOI( );
+			if ( GeolocUtils.params.requalif == true ) {
+				
+				GeolocUtils.setLatAddressInputField(GeolocUtils.getLatInputField());
+				GeolocUtils.setLonAddressInputField(GeolocUtils.getLonInputField());
+			}
 		}
 		GeolocUtils.addGisEventListenersSuggestPoi( ); 
 		GeolocUtils.showMap( );
