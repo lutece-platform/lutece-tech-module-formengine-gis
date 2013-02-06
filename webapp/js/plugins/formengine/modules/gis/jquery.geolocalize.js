@@ -83,13 +83,33 @@ var GeolocUtils = {
 					GeolocUtils.setAddressInputField( "" );
 				}
 				GeolocUtils.setLatInputField( "" );	GeolocUtils.setLonInputField( "" );
-			}else{
-				//change sys proj
-				var source = new Proj4js.Proj(GeolocUtils.params.sourceSRID);
-				var dest = new Proj4js.Proj(GeolocUtils.params.destSRID);
+			} else if ( event.namespace != 'dragComplete' && 
+					GeolocUtils.getLonAddressInputField() != "" &&
+					GeolocUtils.getLatAddressInputField() != "" && 
+					GeolocUtils.getLonInputField() != "" &&
+					GeolocUtils.getLatInputField() != "" &&
+					GeolocUtils.getLonAddressInputField() != GeolocUtils.getLonInputField() &&
+					GeolocUtils.getLatAddressInputField() != GeolocUtils.getLatInputField() ) {
+				// repositioner le marker!!!!
+				//to get the global map objects
+				var $LUTECE = window.LUTECE || (window.LUTECE = {});
+				var $GIS = $LUTECE.GIS || ($LUTECE.GIS = {});
+				var $maps = $GIS.maps || ($GIS.maps = {});
 				
+				//get the geomarker
+				var marker = $maps[GeolocUtils.params.idMapDiv].geolocalizationMarkerLayers[0].features[0];
+				
+				//change sys proj
+				p = new Proj4js.Point(GeolocUtils.getLonInputField(), GeolocUtils.getLatInputField());   
+				Proj4js.transform(GeolocUtils.params.projDestSRID, GeolocUtils.params.projSourceSRID, p);
+				
+				var lonLat = new OpenLayers.LonLat(p.x, p.y);
+				marker.move(lonLat);
+				
+			} else {
+				//change sys proj
 				p = new Proj4js.Point(event.lonLat.lon, event.lonLat.lat);   
-				Proj4js.transform(source, dest, p);
+				Proj4js.transform(GeolocUtils.params.projSourceSRID, GeolocUtils.params.projDestSRID, p);
 
 				GeolocUtils.setLonInputField( p.x );
 				GeolocUtils.setLatInputField( p.y ); 			
@@ -97,6 +117,7 @@ var GeolocUtils = {
 					GeolocUtils.setAddressInputField( event.address );
 					GeolocUtils.setLonAddressInputField( p.x );
 					GeolocUtils.setLatAddressInputField( p.y );
+					
 				}
 				GeolocUtils.params.currentAddressInputField = GeolocUtils.getAddressInputField();
 				if( GeolocUtils.params.addressValid == true )
@@ -154,11 +175,8 @@ var GeolocUtils = {
 			
 			var latAddressFieldValue = GeolocUtils.getLatAddressInputField( );
 			var lonAddressFieldValue = GeolocUtils.getLonAddressInputField( );
-			console.log("10");
-			if( addressFieldValue != "" ) {
-				console.log("11");
-				console.info("reload?? : "+latFieldValue+", "+lonFieldValue+"=> "+latAddressFieldValue+", "+lonAddressFieldValue);
-				console.log("12");
+
+			if( addressFieldValue != "" && lonAddressFieldValue != "" && latAddressFieldValue != "") {
 				//on recupere les anciennes valeurs (avec la projection de destination donc)
 				var poi = {
 						typoLibelle: addressFieldValue,
@@ -167,18 +185,18 @@ var GeolocUtils = {
 						srid: GeolocUtils.params.destSRID
 				};
 				
-				$('body').trigger(
-						jQuery.Event('GisLocalization.send.geolocalize.suggestPOI', {
+				$("body").trigger(
+						jQuery.Event("GisLocalization.send.geolocalize.suggestPOI", {
 								poi: poi
 							})
 					);
 				
-				// on repositionne le marker ensuite...
+				
 			}
 		};
 		
 		if( GeolocUtils.params.addressAutoReload ) {
-			$("body").bind( 'GisMap.displayComplete', reloadAddress );
+			$("body").bind( "GisMap.displayComplete", reloadAddress );
 		}
 		
 		var onDisplayMap = GeolocUtils.params.onDisplayMap;
@@ -232,8 +250,12 @@ var GeolocUtils = {
 	},
 	
 	poiSelected : function (poi) {
+		console.log(poi);
 		var poiWithProj = poi;
 		poiWithProj.srid = GeolocUtils.params.sourceSRID;
+		
+		//empty all fields
+		GeolocUtils.cleanInputsFields();
 		
 		$('body').trigger(
 			jQuery.Event('GisLocalization.send.geolocalize.suggestPOI', {
@@ -270,6 +292,15 @@ var GeolocUtils = {
 		});
 	},
 
+	cleanInputsFields: function ( )
+	{
+		GeolocUtils.setAddressInputField("");
+		GeolocUtils.setLonInputField("");
+		GeolocUtils.setLatInputField("");
+		GeolocUtils.setLonAddressInputField("");
+		GeolocUtils.setLatAddressInputField("");
+	},
+	
 	setAddressInputField: function ( data ) 
 	{
 		$(document.getElementById($(GeolocUtils.params.thisOject).attr('id'))).val(data);
@@ -394,6 +425,9 @@ jQuery.fn.geolocalizeSuggestPOI = function(params) {
 	$(this).keypress(function(event) {
 		return event.keyCode != 13;
 	});
+	
+	params.projSourceSRID = new Proj4js.Proj(params.sourceSRID);
+	params.projDestSRID = new Proj4js.Proj(params.destSRID);
 	
 	$(document).ready(function(){
 		GeolocUtils.initGeolocalization(params);
