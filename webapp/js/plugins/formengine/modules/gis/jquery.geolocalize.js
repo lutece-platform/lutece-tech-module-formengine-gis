@@ -250,17 +250,20 @@ var GeolocUtils = {
 	},
 	
 	poiSelected : function (poi) {
-		var poiWithProj = poi;
-		poiWithProj.srid = GeolocUtils.params.sourceSRID;
 		
-		//empty all fields
-		GeolocUtils.cleanInputsFields();
-		
-		$('body').trigger(
-			jQuery.Event('GisLocalization.send.geolocalize.suggestPOI', {
-					poi: poiWithProj
-				})
-		);
+		if (poi != undefined) {
+			var poiWithProj = poi;
+			poiWithProj.srid = GeolocUtils.params.sourceSRID;
+			
+			//empty all fields
+			GeolocUtils.cleanInputsFields();
+			
+			$('body').trigger(
+				jQuery.Event('GisLocalization.send.geolocalize.suggestPOI', {
+						poi: poiWithProj
+					})
+			);
+		}
 	},
 	
 	showMap : function( ) 
