@@ -430,6 +430,9 @@ jQuery.fn.geolocalizeSuggestPOI = function(params) {
 	
 	params.projSourceSRID = new Proj4js.Proj(params.sourceSRID);
 	params.projDestSRID = new Proj4js.Proj(params.destSRID);
+	// FIX for IE
+	params.projSourceSRID = new Proj4js.Proj(params.sourceSRID);
+	params.projDestSRID = new Proj4js.Proj(params.destSRID);
 	
 	$(document).ready(function(){
 		GeolocUtils.initGeolocalization(params);
