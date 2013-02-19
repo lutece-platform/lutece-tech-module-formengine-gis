@@ -83,36 +83,39 @@ var GeolocUtils = {
 					GeolocUtils.setAddressInputField( "" );
 				}
 				GeolocUtils.setLatInputField( "" );	GeolocUtils.setLonInputField( "" );
-			} else if ( event.namespace != 'dragComplete' && 
-					GeolocUtils.getLonAddressInputField() != "" &&
-					GeolocUtils.getLatAddressInputField() != "" && 
-					GeolocUtils.getLonInputField() != "" &&
-					GeolocUtils.getLatInputField() != "" &&
-					GeolocUtils.getLonAddressInputField() != GeolocUtils.getLonInputField() &&
-					GeolocUtils.getLatAddressInputField() != GeolocUtils.getLatInputField() ) {
-				// repositioner le marker!!!!
-				//to get the global map objects
-				var $LUTECE = window.LUTECE || (window.LUTECE = {});
-				var $GIS = $LUTECE.GIS || ($LUTECE.GIS = {});
-				var $maps = $GIS.maps || ($GIS.maps = {});
-				
-				//get the geomarker
-				var marker = $maps[GeolocUtils.params.idMapDiv].geolocalizationMarkerLayers[0].features[0];
-				
-				//change sys proj
-				p = new Proj4js.Point(GeolocUtils.getLonInputField(), GeolocUtils.getLatInputField());   
-				Proj4js.transform(GeolocUtils.params.projDestSRID, GeolocUtils.params.projSourceSRID, p);
-				
-				var lonLat = new OpenLayers.LonLat(p.x, p.y);
-				marker.move(lonLat);
-				
 			} else {
-				//change sys proj
-				p = new Proj4js.Point(event.lonLat.lon, event.lonLat.lat);   
-				Proj4js.transform(GeolocUtils.params.projSourceSRID, GeolocUtils.params.projDestSRID, p);
-
-				GeolocUtils.setLonInputField( p.x );
-				GeolocUtils.setLatInputField( p.y ); 			
+				
+				if ( event.namespace != 'dragComplete' && 
+						GeolocUtils.getLonAddressInputField() != "" &&
+						GeolocUtils.getLatAddressInputField() != "" && 
+						GeolocUtils.getLonInputField() != "" &&
+						GeolocUtils.getLatInputField() != "" &&
+						GeolocUtils.getLonAddressInputField() != GeolocUtils.getLonInputField() &&
+						GeolocUtils.getLatAddressInputField() != GeolocUtils.getLatInputField() ) {
+					// repositioner le marker!!!!
+					//to get the global map objects
+					var $LUTECE = window.LUTECE || (window.LUTECE = {});
+					var $GIS = $LUTECE.GIS || ($LUTECE.GIS = {});
+					var $maps = $GIS.maps || ($GIS.maps = {});
+					
+					//get the geomarker
+					var marker = $maps[GeolocUtils.params.idMapDiv].geolocalizationMarkerLayers[0].features[0];
+					
+					//change sys proj
+					p = new Proj4js.Point(GeolocUtils.getLonInputField(), GeolocUtils.getLatInputField());   
+					Proj4js.transform(GeolocUtils.params.projDestSRID, GeolocUtils.params.projSourceSRID, p);
+					
+					var lonLat = new OpenLayers.LonLat(p.x, p.y);
+					marker.move(lonLat);
+				} else {
+					//change sys proj
+					p = new Proj4js.Point(event.lonLat.lon, event.lonLat.lat);   
+					Proj4js.transform(GeolocUtils.params.projSourceSRID, GeolocUtils.params.projDestSRID, p);
+	
+					GeolocUtils.setLonInputField( p.x );
+					GeolocUtils.setLatInputField( p.y );
+				}
+				// FIX change event.address to event.typoLibelle in a other method
 				if( event.namespace != 'dragComplete' && event.address.length != 0 ){
 					GeolocUtils.setAddressInputField( event.address );
 					GeolocUtils.setLonAddressInputField( p.x );
@@ -129,6 +132,7 @@ var GeolocUtils = {
 								{
 									GeolocUtils.cleanMapEvent( );
 									GeolocUtils.setLatInputField( "" );	GeolocUtils.setLonInputField( "" );
+									GeolocUtils.setLatAddressInputField( "" );	GeolocUtils.setLonAddressInputField( "" );
 									$(GeolocUtils.params.thisOject).unbind("keyup");
 								}
 							},
@@ -179,7 +183,7 @@ var GeolocUtils = {
 			if( addressFieldValue != "" && lonAddressFieldValue != "" && latAddressFieldValue != "") {
 				//on recupere les anciennes valeurs (avec la projection de destination donc)
 				var poi = {
-						typoLibelle: addressFieldValue,
+						libelleTypo: addressFieldValue,
 						x: lonAddressFieldValue,
 						y: latAddressFieldValue,
 						srid: GeolocUtils.params.destSRID
