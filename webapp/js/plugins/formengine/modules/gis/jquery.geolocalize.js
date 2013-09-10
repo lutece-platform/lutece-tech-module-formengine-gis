@@ -110,7 +110,7 @@ var GeolocUtils = {
 				} else {
 					//change sys proj
 					p = new Proj4js.Point(event.lonLat.lon, event.lonLat.lat);   
-					Proj4js.transform(GeolocUtils.params.projSourceSRID, GeolocUtils.params.projDestSRID, p);
+					Proj4js.transform(GeolocUtils.params.projSourceMapSRID, GeolocUtils.params.projDestSRID, p);
 	
 					GeolocUtils.setLonInputField( p.x );
 					GeolocUtils.setLatInputField( p.y );
@@ -423,6 +423,7 @@ jQuery.fn.geolocalizeSuggestPOI = function(params) {
 		mapWidth : "100%",			// Width of the displayed map.
 		autoComplete : true,		// Activate/deactivate auto-complete feature from the address input text field.
 		sourceSRID : "EPSG:27561",  // SRID from source POIs
+		sourceMapSRID : "EPSG:900913",  // SRID from the map (ex : carto webmercator aka openstreetmap 900913; 27561 pour carto Ville de Paris en Lambert)
 		destSRID : "EPSG:4326"      // SRID from destination fields
 	}, params);
 	
@@ -433,9 +434,11 @@ jQuery.fn.geolocalizeSuggestPOI = function(params) {
 	});
 	
 	params.projSourceSRID = new Proj4js.Proj(params.sourceSRID);
+	params.projSourceMapSRID = new Proj4js.Proj(params.sourceMapSRID);
 	params.projDestSRID = new Proj4js.Proj(params.destSRID);
 	// FIX for IE
 	params.projSourceSRID = new Proj4js.Proj(params.sourceSRID);
+	params.projSourceMapSRID = new Proj4js.Proj(params.sourceMapSRID);
 	params.projDestSRID = new Proj4js.Proj(params.destSRID);
 	
 	$(document).ready(function(){
